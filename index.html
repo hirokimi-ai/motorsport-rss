@@ -26,6 +26,13 @@ h1 { margin: 0; font-size: 18px; letter-spacing: .02em; }
 h1 span { color: var(--accent); }
 .updated { color: var(--muted); font-size: 12px; }
 .updated.stale { color: var(--accent); }
+.refresh { margin-left: auto; align-self: center; font: inherit; font-size: 13px; padding: 4px 14px; border-radius: 8px; border: 0;
+  background: var(--accent); color: #fff; cursor: pointer; }
+.refresh:disabled { opacity: .6; cursor: default; }
+.msg { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 12px); max-width: calc(100% - 32px);
+  background: var(--text); color: var(--bg); font-size: 13px; padding: 8px 14px; border-radius: 8px;
+  opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 10; }
+.msg.show { opacity: 1; transform: translate(-50%, 0); }
 nav { max-width: 1000px; margin: 0 auto; padding: 8px 16px 0; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
 nav::-webkit-scrollbar { display: none; }
 nav button { flex: none; border: 0; background: none; color: var(--muted); font: inherit; font-size: 14px;
@@ -61,7 +68,8 @@ main { max-width: 1000px; margin: 0 auto; padding: 4px 16px 48px; }
 </head>
 <body>
 <header>
-  <div class="top"><h1><span>●</span> Motorsport RSS</h1><div class="updated" id="updated"></div></div>
+  <div class="top"><h1><span>●</span> Motorsport RSS</h1><div class="updated" id="updated"></div><button id="refresh" class="refresh">更新</button></div>
+  <div class="msg" id="msg" role="status"></div>
   <nav id="tabs"></nav>
   <div class="filters">
     <div class="seg" id="lang">
@@ -160,6 +168,7 @@ let items = [];
 function load() {
   const data = window.FEED_DATA;
   if (!data) return false;
+  errors.length = 0;
   const seen = new Map();
   for (const f of data.feeds) {
     if (!f.ok) { errors.push(`${f.name}（${f.cat}）: HTTP ${f.status}`); continue; }
@@ -173,13 +182,17 @@ function load() {
     } catch (e) { errors.push(`${f.name}（${f.cat}）: ${e.message}`); }
   }
   items = [...seen.values()].sort((a, b) => (b.date || 0) - (a.date || 0));
-  const gen = new Date(data.generated);
+  updateLabel();
+  return true;
+}
+
+function updateLabel() {
+  const gen = new Date(window.FEED_DATA.generated);
   const ageMin = (Date.now() - gen) / 60000;
   const el = $("updated");
   el.textContent = `取得: ${gen.toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}（${ago(gen)}）`
     + (ageMin > 60 && location.protocol === "file:" ? " — 「更新して開く.command」で最新化できます" : "");
   el.classList.toggle("stale", ageMin > 60);
-  return true;
 }
 
 function ago(d) {
@@ -271,9 +284,50 @@ function render() {
   }
 }
 
+// data.js を読み直す（公開版では GitHub Actions が 30 分ごとに作り直している）
+let reloading = false;
+function reloadData(manual) {
+  if (reloading) return;
+  reloading = true;
+  const btn = $("refresh"), prev = window.FEED_DATA && window.FEED_DATA.generated;
+  if (manual) { btn.disabled = true; btn.textContent = "確認中…"; }
+  const s = document.createElement("script");
+  s.src = "data.js?t=" + Date.now();
+  const done = msg => {
+    s.remove(); reloading = false;
+    btn.disabled = false; btn.textContent = "更新";
+    if (manual && msg) flash(msg);
+  };
+  s.onload = () => {
+    if (window.FEED_DATA && window.FEED_DATA.generated !== prev) {
+      load(); renderSources(); render();
+      done("新しい記事を読み込みました");
+    } else {
+      if (window.FEED_DATA) { updateLabel(); render(); }  // 「○分前」の表示だけ更新
+      done(location.protocol === "file:" ? "最新です（取り直すには「更新して開く.command」を実行）" : "最新です（記事は 30 分ごとに自動取得されます）");
+    }
+  };
+  s.onerror = () => done("読み込めませんでした。通信状況を確認してください");
+  document.head.appendChild(s);
+}
+
+let flashTimer;
+function flash(msg) {
+  const el = $("msg");
+  el.textContent = msg; el.classList.add("show");
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => el.classList.remove("show"), 3500);
+}
+
+$("refresh").onclick = () => reloadData(true);
+// 開きっぱなしでも 10 分ごと、タブに戻ってきたときにも確認する
+setInterval(() => { if (!document.hidden) reloadData(false); }, 10 * 60 * 1000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) reloadData(false); });
+
 if (!load()) {
   $("list").innerHTML = `<div class="notice">データがありません。ターミナルで <code>./fetch.sh</code> を実行するか、「更新して開く.command」をダブルクリックしてください。</div>`;
-} else {
+}
+{
   for (const b of $("lang").children) {
     b.classList.toggle("on", b.dataset.v === state.lang);
     b.onclick = () => {
@@ -286,8 +340,7 @@ if (!load()) {
   $("q").oninput = e => { state.q = e.target.value; state.limit = 60; render(); };
   $("hideRead").checked = state.hideRead;
   $("hideRead").onchange = e => { state.hideRead = e.target.checked; store.set("msr.hideRead", state.hideRead); render(); };
-  renderSources();
-  render();
+  if (items.length) { renderSources(); render(); }
 }
 </script>
 </body>
