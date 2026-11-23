@@ -131,7 +131,7 @@ main { min-width: 0; padding: 4px 0 48px; }
   <main id="list"></main>
   <aside id="sns" aria-label="SNS の投稿">
     <div class="sns-head">
-      <b>SNS</b><span class="via">Bluesky の最新投稿</span>
+      <b>SNS</b><span class="via">Bluesky の公式・記者アカウント</span>
       <button id="snsReload" title="SNS を再読み込み">↻</button>
       <button id="snsClose" class="sns-close" title="閉じる">閉じる</button>
     </div>
@@ -344,23 +344,31 @@ function render() {
   }
 }
 
-// ---- SNS（Bluesky のハッシュタグ検索。ブラウザから直接取得できる） ----
-const SNS_MAIN = ["#F1", "#MotoGP", "#SuperGT", "#スーパーGT", "#WEC", "#WRC", "#IndyCar", "#FormulaE"];
-const SNS_TAGS = {
-  all: SNS_MAIN, other: SNS_MAIN,
-  f1: ["#F1"],
-  supergt: ["#SuperGT", "#スーパーGT"],
-  superformula: ["#SFormula", "#スーパーフォーミュラ"],
-  motogp: ["#MotoGP"],
-  wec: ["#WEC"],
-  wrc: ["#WRC"],
-  indy: ["#IndyCar", "#NASCAR"],
-  fe: ["#FormulaE"],
-};
-const BSKY_SEARCH = "https://api.bsky.app/xrpc/app.bsky.feed.searchPosts";
+// ---- SNS（Bluesky の公式・記者アカウントの投稿。ブラウザから直接取得できる） ----
+// cat: そのアカウントのカテゴリー。auto: true は複数シリーズを扱うので投稿ごとにキーワードで振り分け、
+// どれにも当たらなければ cat に入れる
+const SNS_ACCOUNTS = [
+  { handle: "andrewbensonf1.bsky.social", note: "BBC Sport", cat: "f1" },
+  { handle: "chrismedlandf1.bsky.social", note: "F1 記者", cat: "f1" },
+  { handle: "rorymitchellf1.bsky.social", note: "F1 記者", cat: "f1" },
+  { handle: "thomasmaheronf1.bsky.social", note: "PlanetF1 記者", cat: "f1" },
+  { handle: "joesaward.bsky.social", note: "F1 記者", cat: "f1" },
+  { handle: "adamcooperf1.bsky.social", note: "F1 記者", cat: "f1" },
+  { handle: "planetf1com.bsky.social", note: "PlanetF1", cat: "f1" },
+  { handle: "f1oversteer.com", note: "F1 Oversteer", cat: "f1" },
+  { handle: "formula1-data.bsky.social", note: "Formula1-Data", cat: "f1", auto: true, lang: "ja" },
+  { handle: "motomatters.com", note: "MotoMatters", cat: "motogp" },
+  { handle: "neilmorrison87.bsky.social", note: "MotoGP 記者", cat: "motogp" },
+  { handle: "denkmit.bsky.social", note: "MotoGP 記者", cat: "motogp" },
+  { handle: "dailysportscar.bsky.social", note: "dailysportscar", cat: "wec" },
+  { handle: "marshallpruett.bsky.social", note: "RACER 記者", cat: "indy", auto: true },
+  { handle: "rjoconnell.bsky.social", note: "モータースポーツ記者", cat: "other", auto: true },
+  { handle: "racefans.net", note: "RaceFans", cat: "f1", auto: true },
+];
+const BSKY_FEED = "https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed";
 // 成人向け・暴力的・スパムのラベルが付いた投稿は表示しない
 const BLOCKED_LABELS = new Set(["porn", "sexual", "sexual-figurative", "nudity", "graphic-media", "gore", "spam", "!hide", "!warn"]);
-const snsCache = new Map();
+const accountCache = new Map();  // handle -> { t, posts: [{ post, cats }] }
 let snsSeq = 0, snsKey = "";
 
 function snsVisible() {
@@ -372,44 +380,69 @@ function maybeLoadSns() {
   if (key !== snsKey) loadSns(false);
 }
 
+function classifyText(text) {
+  const hits = AUTO_ORDER.filter(id => CATS.find(c => c.id === id).re.test(text));
+  return hits.length > 1 ? hits.filter(c => c !== "f1") : hits;
+}
+
+async function fetchAccount(acc) {
+  const p = new URLSearchParams({ actor: acc.handle, limit: 30, filter: "posts_no_replies" });
+  const r = await fetch(`${BSKY_FEED}?${p}`);
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const posts = ((await r.json()).feed || [])
+    .filter(item => !item.reason)  // リポストは除き、本人の投稿だけにする
+    .map(item => item.post)
+    .filter(p => ![...(p.labels || []), ...(p.author?.labels || [])].some(l => BLOCKED_LABELS.has(l.val)))
+    .map(post => {
+      let cats = [acc.cat];
+      if (acc.auto) {
+        const hit = classifyText((post.record?.text || "") + " " + (post.embed?.external?.title || ""));
+        if (hit.length) cats = hit;
+      }
+      return { post, cats, lang: acc.lang || "en" };
+    });
+  accountCache.set(acc.handle, { t: Date.now(), posts });
+}
+
 async function loadSns(force) {
   const key = snsKey = state.cat + "|" + state.lang;
-  const tags = SNS_TAGS[state.cat] || SNS_MAIN;
-  $("snsTags").innerHTML = "";
-  for (const t of tags) { const s = document.createElement("span"); s.textContent = t; $("snsTags").appendChild(s); }
-  $("snsTags").append(state.lang === "all" ? "" : `（${state.lang === "ja" ? "日本語" : "English"}）`);
+  const cat = state.cat;
+  const accounts = cat === "all" ? SNS_ACCOUNTS : SNS_ACCOUNTS.filter(a => a.auto || a.cat === cat);
+  const named = cat === "all" ? SNS_ACCOUNTS : accounts.filter(a => a.cat === cat);
+  $("snsTags").textContent = cat === "all" || cat === "other"
+    ? `公式・記者 ${SNS_ACCOUNTS.length} アカウント`
+    : named.length ? named.map(a => a.note).filter((v, i, s) => s.indexOf(v) === i).join("・") + " ほか" : "複数シリーズを扱うアカウントから";
+  if (state.lang !== "all") $("snsTags").append(`（${state.lang === "ja" ? "日本語" : "English"}）`);
 
-  const cached = snsCache.get(key);
-  if (cached && !force && Date.now() - cached.t < 120000) { renderSns(cached.posts); return; }
-  if (!cached) $("snsList").innerHTML = `<div class="sns-note">読み込み中…</div>`;
+  const stale = accounts.filter(a => force || !accountCache.has(a.handle) || Date.now() - accountCache.get(a.handle).t > 120000);
+  if (!stale.length) { renderSns(collectPosts(accounts)); return; }
+  const hasAny = accounts.some(a => accountCache.has(a.handle));
+  if (hasAny) renderSns(collectPosts(accounts));
+  else $("snsList").innerHTML = `<div class="sns-note">読み込み中…</div>`;
   if (!snsVisible() && !force) return;  // スマホでパネルを閉じているときは取りに行かない
 
   const seq = ++snsSeq;
-  // 「すべて」の言語でも日本語・英語以外は後で除くので、多めに取る
-  const limit = tags.length > 2 ? (state.lang === "all" ? 30 : 15) : (state.lang === "all" ? 60 : 30);
-  const results = await Promise.allSettled(tags.map(async tag => {
-    const p = new URLSearchParams({ q: tag, sort: "latest", limit });
-    if (state.lang !== "all") p.set("lang", state.lang);
-    const r = await fetch(`${BSKY_SEARCH}?${p}`);
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    return (await r.json()).posts || [];
-  }));
-  if (seq !== snsSeq) return;  // 途中でカテゴリーが切り替わった
-
-  const ok = results.filter(r => r.status === "fulfilled");
-  if (!ok.length) {
-    if (!cached) $("snsList").innerHTML = `<div class="sns-note">Bluesky に接続できませんでした。↻ で再試行してください。</div>`;
+  const results = await Promise.allSettled(stale.map(fetchAccount));
+  if (seq !== snsSeq || key !== snsKey) return;  // 途中でカテゴリーが切り替わった
+  if (!results.some(r => r.status === "fulfilled") && !hasAny) {
+    $("snsList").innerHTML = `<div class="sns-note">Bluesky に接続できませんでした。↻ で再試行してください。</div>`;
     return;
   }
-  const seen = new Set();
-  const posts = ok.flatMap(r => r.value)
-    .filter(p => !seen.has(p.uri) && seen.add(p.uri))
-    .filter(p => ![...(p.labels || []), ...(p.author?.labels || [])].some(l => BLOCKED_LABELS.has(l.val)))
-    .filter(p => { const l = p.record?.langs; return !l || !l.length || l.some(x => /^(ja|en)/.test(x)); })
+  renderSns(collectPosts(accounts));
+}
+
+function collectPosts(accounts) {
+  const cat = state.cat, lang = state.lang;
+  return accounts.flatMap(a => accountCache.get(a.handle)?.posts || [])
+    .filter(x => cat === "all" || x.cats.includes(cat))
+    .filter(x => {
+      if (lang === "all") return true;
+      const l = x.post.record?.langs;
+      return l && l.length ? l.some(v => v.startsWith(lang)) : x.lang === lang;
+    })
+    .map(x => x.post)
     .sort((a, b) => new Date(b.indexedAt) - new Date(a.indexedAt))
     .slice(0, 60);
-  snsCache.set(key, { t: Date.now(), posts });
-  renderSns(posts);
 }
 
 // 本文中のリンク・ハッシュタグ・メンションを facets（UTF-8 のバイト位置）から復元する
@@ -473,7 +506,7 @@ function postMedia(embed) {
 function renderSns(posts) {
   const list = $("snsList");
   list.innerHTML = "";
-  if (!posts.length) { list.innerHTML = `<div class="sns-note">最近の投稿はありません</div>`; return; }
+  if (!posts.length) { list.innerHTML = `<div class="sns-note">このカテゴリーの最近の投稿はありません。公式・記者アカウントがまだ Bluesky に少ないシリーズです。</div>`; return; }
   for (const p of posts) {
     const a = p.author || {};
     const url = `https://bsky.app/profile/${a.handle || a.did}/post/${p.uri.split("/").pop()}`;
