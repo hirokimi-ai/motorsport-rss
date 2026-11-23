@@ -8,7 +8,7 @@
 :root {
   --bg: #f4f4f2; --surface: #ffffff; --text: #18181b; --muted: #6b6b73;
   --line: #e2e2de; --accent: #d7261e; --accent-soft: #fde8e6; --chip: #ececea;
-  --read: #9a9aa2;
+  --read: #9a9aa2; --maxw: 1400px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -21,7 +21,7 @@
 body { margin: 0; background: var(--bg); color: var(--text);
   font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Helvetica Neue", sans-serif; }
 header { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
-.top { max-width: 1000px; margin: 0 auto; padding: 12px 16px 0; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.top { max-width: var(--maxw); margin: 0 auto; padding: 12px 16px 0; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 h1 { margin: 0; font-size: 18px; letter-spacing: .02em; }
 h1 span { color: var(--accent); }
 .updated { color: var(--muted); font-size: 12px; }
@@ -33,13 +33,13 @@ h1 span { color: var(--accent); }
   background: var(--text); color: var(--bg); font-size: 13px; padding: 8px 14px; border-radius: 8px;
   opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 10; }
 .msg.show { opacity: 1; transform: translate(-50%, 0); }
-nav { max-width: 1000px; margin: 0 auto; padding: 8px 16px 0; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+nav { max-width: var(--maxw); margin: 0 auto; padding: 8px 16px 0; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
 nav::-webkit-scrollbar { display: none; }
 nav button { flex: none; border: 0; background: none; color: var(--muted); font: inherit; font-size: 14px;
   padding: 8px 12px 10px; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
 nav button.on { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
 nav button small { font-size: 11px; color: var(--muted); margin-left: 3px; font-weight: 400; }
-.filters { max-width: 1000px; margin: 0 auto; padding: 12px 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filters { max-width: var(--maxw); margin: 0 auto; padding: 12px 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .seg { display: inline-flex; background: var(--chip); border-radius: 8px; padding: 2px; }
 .seg button { border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
 .seg button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
@@ -47,7 +47,7 @@ input[type=search], select { font: inherit; font-size: 13px; padding: 5px 10px; 
   background: var(--surface); color: var(--text); border-radius: 8px; }
 input[type=search] { flex: 1; min-width: 140px; }
 label.chk { font-size: 13px; color: var(--muted); display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }
-main { max-width: 1000px; margin: 0 auto; padding: 4px 16px 48px; }
+main { min-width: 0; padding: 4px 0 48px; }
 .item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
 .item .body { flex: 1; min-width: 0; }
 .meta { font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -64,6 +64,53 @@ main { max-width: 1000px; margin: 0 auto; padding: 4px 16px 48px; }
 .errors { font-size: 12px; color: var(--muted); padding: 16px 0; }
 .more { display: block; margin: 20px auto; font: inherit; padding: 8px 20px; border-radius: 8px; border: 1px solid var(--line);
   background: var(--surface); color: var(--text); cursor: pointer; }
+
+/* 左 3/4 が記事、右 1/4 が SNS */
+.layout { max-width: var(--maxw); margin: 0 auto; padding: 0 16px; display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+#sns { position: sticky; top: var(--hdr, 140px); height: calc(100vh - var(--hdr, 140px)); display: flex; flex-direction: column;
+  border-left: 1px solid var(--line); padding-left: 16px; }
+.sns-head { display: flex; align-items: center; gap: 8px; padding: 12px 0 4px; }
+.sns-head b { font-size: 15px; }
+.sns-head .via { font-size: 12px; color: var(--muted); }
+.sns-head button { border: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; font-size: 13px;
+  border-radius: 8px; padding: 2px 10px; cursor: pointer; }
+.sns-head #snsReload { margin-left: auto; }
+.sns-close { display: none; }
+.sns-tags { font-size: 12px; color: var(--muted); padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.sns-tags span { color: var(--accent); font-weight: 600; margin-right: 6px; display: inline-block; white-space: nowrap; }
+#snsList { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding-bottom: 24px; }
+.post { padding: 12px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.phead { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); min-width: 0; }
+.av { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; background: var(--chip); flex: none; }
+.pname { font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.phandle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
+.ptime { flex: none; }
+.ptext { font-size: 13.5px; margin-top: 4px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ptext a { color: var(--accent); text-decoration: none; }
+.ptext a:hover { text-decoration: underline; }
+.pimg { display: block; width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; margin-top: 8px; background: var(--chip); }
+.pcard { display: flex; gap: 8px; margin-top: 8px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden;
+  color: var(--text); text-decoration: none; font-size: 12px; background: var(--surface); }
+.pcard img { width: 64px; height: 64px; object-fit: cover; flex: none; }
+.pcard div { padding: 6px 8px 6px 0; min-width: 0; }
+.pcard b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 600; }
+.pcard small { color: var(--muted); }
+.pfoot { font-size: 11px; color: var(--muted); margin-top: 6px; display: flex; gap: 12px; }
+.sns-note { font-size: 12px; color: var(--muted); padding: 24px 0; text-align: center; }
+.sns-fab { display: none; position: fixed; right: 16px; bottom: 20px; z-index: 15; border: 0; border-radius: 999px;
+  background: var(--accent); color: #fff; font: inherit; font-weight: 600; font-size: 14px; padding: 10px 18px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.25); cursor: pointer; }
+@media (max-width: 899px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  #sns { display: none; }
+  body.sns-open { overflow: hidden; }
+  body.sns-open #sns { display: flex; position: fixed; inset: 0; height: auto; z-index: 20; background: var(--bg);
+    border-left: 0; padding: 0 16px; }
+  .sns-fab { display: block; }
+  body.sns-open .sns-fab { display: none; }
+  .sns-close { display: inline-block; }
+}
 </style>
 </head>
 <body>
@@ -80,7 +127,19 @@ main { max-width: 1000px; margin: 0 auto; padding: 4px 16px 48px; }
     <label class="chk"><input type="checkbox" id="hideRead"> 既読を隠す</label>
   </div>
 </header>
-<main id="list"></main>
+<div class="layout">
+  <main id="list"></main>
+  <aside id="sns" aria-label="SNS の投稿">
+    <div class="sns-head">
+      <b>SNS</b><span class="via">Bluesky の最新投稿</span>
+      <button id="snsReload" title="SNS を再読み込み">↻</button>
+      <button id="snsClose" class="sns-close" title="閉じる">閉じる</button>
+    </div>
+    <div class="sns-tags" id="snsTags"></div>
+    <div id="snsList"></div>
+  </aside>
+</div>
+<button id="snsFab" class="sns-fab">SNS</button>
 
 <script src="data.js"></script>
 <script>
@@ -238,6 +297,7 @@ function renderSources() {
 }
 
 function render() {
+  maybeLoadSns();
   const base = baseFiltered();
   renderTabs(base);
   const list = state.cat === "all" ? base : base.filter(i => i.cats.includes(state.cat));
@@ -283,6 +343,172 @@ function render() {
     main.appendChild(e);
   }
 }
+
+// ---- SNS（Bluesky のハッシュタグ検索。ブラウザから直接取得できる） ----
+const SNS_MAIN = ["#F1", "#MotoGP", "#SuperGT", "#スーパーGT", "#WEC", "#WRC", "#IndyCar", "#FormulaE"];
+const SNS_TAGS = {
+  all: SNS_MAIN, other: SNS_MAIN,
+  f1: ["#F1"],
+  supergt: ["#SuperGT", "#スーパーGT"],
+  superformula: ["#SFormula", "#スーパーフォーミュラ"],
+  motogp: ["#MotoGP"],
+  wec: ["#WEC"],
+  wrc: ["#WRC"],
+  indy: ["#IndyCar", "#NASCAR"],
+  fe: ["#FormulaE"],
+};
+const BSKY_SEARCH = "https://api.bsky.app/xrpc/app.bsky.feed.searchPosts";
+// 成人向け・暴力的・スパムのラベルが付いた投稿は表示しない
+const BLOCKED_LABELS = new Set(["porn", "sexual", "sexual-figurative", "nudity", "graphic-media", "gore", "spam", "!hide", "!warn"]);
+const snsCache = new Map();
+let snsSeq = 0, snsKey = "";
+
+function snsVisible() {
+  return getComputedStyle($("sns")).display !== "none";
+}
+
+function maybeLoadSns() {
+  const key = state.cat + "|" + state.lang;
+  if (key !== snsKey) loadSns(false);
+}
+
+async function loadSns(force) {
+  const key = snsKey = state.cat + "|" + state.lang;
+  const tags = SNS_TAGS[state.cat] || SNS_MAIN;
+  $("snsTags").innerHTML = "";
+  for (const t of tags) { const s = document.createElement("span"); s.textContent = t; $("snsTags").appendChild(s); }
+  $("snsTags").append(state.lang === "all" ? "" : `（${state.lang === "ja" ? "日本語" : "English"}）`);
+
+  const cached = snsCache.get(key);
+  if (cached && !force && Date.now() - cached.t < 120000) { renderSns(cached.posts); return; }
+  if (!cached) $("snsList").innerHTML = `<div class="sns-note">読み込み中…</div>`;
+  if (!snsVisible() && !force) return;  // スマホでパネルを閉じているときは取りに行かない
+
+  const seq = ++snsSeq;
+  const limit = tags.length > 2 ? 15 : 30;
+  const results = await Promise.allSettled(tags.map(async tag => {
+    const p = new URLSearchParams({ q: tag, sort: "latest", limit });
+    if (state.lang !== "all") p.set("lang", state.lang);
+    const r = await fetch(`${BSKY_SEARCH}?${p}`);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return (await r.json()).posts || [];
+  }));
+  if (seq !== snsSeq) return;  // 途中でカテゴリーが切り替わった
+
+  const ok = results.filter(r => r.status === "fulfilled");
+  if (!ok.length) {
+    if (!cached) $("snsList").innerHTML = `<div class="sns-note">Bluesky に接続できませんでした。↻ で再試行してください。</div>`;
+    return;
+  }
+  const seen = new Set();
+  const posts = ok.flatMap(r => r.value)
+    .filter(p => !seen.has(p.uri) && seen.add(p.uri))
+    .filter(p => ![...(p.labels || []), ...(p.author?.labels || [])].some(l => BLOCKED_LABELS.has(l.val)))
+    .sort((a, b) => new Date(b.indexedAt) - new Date(a.indexedAt))
+    .slice(0, 60);
+  snsCache.set(key, { t: Date.now(), posts });
+  renderSns(posts);
+}
+
+// 本文中のリンク・ハッシュタグ・メンションを facets（UTF-8 のバイト位置）から復元する
+function richText(record) {
+  const frag = document.createDocumentFragment();
+  const text = record.text || "";
+  const facets = (record.facets || []).slice().sort((a, b) => a.index.byteStart - b.index.byteStart);
+  try {
+    const bytes = new TextEncoder().encode(text), dec = new TextDecoder();
+    let pos = 0;
+    for (const f of facets) {
+      const { byteStart: s, byteEnd: e } = f.index;
+      if (s < pos || e > bytes.length || s >= e) continue;
+      frag.append(dec.decode(bytes.slice(pos, s)));
+      const feat = f.features?.[0] || {};
+      const label = dec.decode(bytes.slice(s, e));
+      let href = null;
+      if (feat.$type === "app.bsky.richtext.facet#link" && /^https?:\/\//.test(feat.uri)) href = feat.uri;
+      else if (feat.$type === "app.bsky.richtext.facet#tag") href = "https://bsky.app/hashtag/" + encodeURIComponent(feat.tag);
+      else if (feat.$type === "app.bsky.richtext.facet#mention") href = "https://bsky.app/profile/" + feat.did;
+      if (href) {
+        const a = document.createElement("a");
+        a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = label;
+        frag.append(a);
+      } else frag.append(label);
+      pos = e;
+    }
+    frag.append(dec.decode(bytes.slice(pos)));
+  } catch { frag.textContent = ""; frag.append(text); }
+  return frag;
+}
+
+function postMedia(embed) {
+  if (!embed) return null;
+  const media = embed.media || embed;  // recordWithMedia の場合は media の中
+  const img = media.images?.[0]?.thumb || media.thumbnail;
+  if (img && /^https:/.test(img)) {
+    const el = document.createElement("img");
+    el.className = "pimg"; el.loading = "lazy"; el.src = img; el.alt = media.images?.[0]?.alt || "";
+    el.referrerPolicy = "no-referrer"; el.onerror = () => el.remove();
+    return el;
+  }
+  const ext = media.external;
+  if (ext && /^https?:\/\//.test(ext.uri)) {
+    const a = document.createElement("a");
+    a.className = "pcard"; a.href = ext.uri; a.target = "_blank"; a.rel = "noopener";
+    if (ext.thumb && /^https:/.test(ext.thumb)) {
+      const im = document.createElement("img"); im.src = ext.thumb; im.loading = "lazy"; im.alt = "";
+      im.referrerPolicy = "no-referrer"; im.onerror = () => im.remove(); a.appendChild(im);
+    }
+    const d = document.createElement("div");
+    const b = document.createElement("b"); b.textContent = ext.title || ext.uri;
+    const sm = document.createElement("small");
+    try { sm.textContent = new URL(ext.uri).hostname.replace(/^www\./, ""); } catch {}
+    d.append(b, sm); a.appendChild(d);
+    return a;
+  }
+  return null;
+}
+
+function renderSns(posts) {
+  const list = $("snsList");
+  list.innerHTML = "";
+  if (!posts.length) { list.innerHTML = `<div class="sns-note">最近の投稿はありません</div>`; return; }
+  for (const p of posts) {
+    const a = p.author || {};
+    const url = `https://bsky.app/profile/${a.handle || a.did}/post/${p.uri.split("/").pop()}`;
+    const el = document.createElement("article");
+    el.className = "post";
+    el.onclick = e => { if (!e.target.closest("a")) window.open(url, "_blank", "noopener"); };
+
+    const head = document.createElement("div"); head.className = "phead";
+    if (a.avatar && /^https:/.test(a.avatar)) {
+      const av = document.createElement("img"); av.className = "av"; av.src = a.avatar; av.alt = ""; av.loading = "lazy";
+      av.referrerPolicy = "no-referrer"; head.appendChild(av);
+    }
+    const nm = document.createElement("span"); nm.className = "pname"; nm.textContent = a.displayName || a.handle;
+    const hd = document.createElement("span"); hd.className = "phandle"; hd.textContent = "@" + a.handle;
+    const tm = document.createElement("span"); tm.className = "ptime"; tm.textContent = ago(new Date(p.indexedAt));
+    head.append(nm, hd, tm);
+
+    const body = document.createElement("div"); body.className = "ptext"; body.appendChild(richText(p.record || {}));
+    el.append(head, body);
+    const media = postMedia(p.embed);
+    if (media) el.appendChild(media);
+
+    const foot = document.createElement("div"); foot.className = "pfoot";
+    foot.textContent = `♡ ${p.likeCount || 0}　↻ ${p.repostCount || 0}　💬 ${p.replyCount || 0}`;
+    el.appendChild(foot);
+    list.appendChild(el);
+  }
+}
+
+$("snsReload").onclick = () => loadSns(true);
+$("snsFab").onclick = () => { document.body.classList.add("sns-open"); loadSns(false); };
+$("snsClose").onclick = () => document.body.classList.remove("sns-open");
+setInterval(() => { if (!document.hidden && snsVisible()) loadSns(true); }, 2 * 60 * 1000);
+
+// 固定ヘッダーの高さに合わせて SNS パネルの位置を決める
+const setHdr = () => document.documentElement.style.setProperty("--hdr", document.querySelector("header").offsetHeight + "px");
+new ResizeObserver(setHdr).observe(document.querySelector("header"));
 
 // data.js を読み直す（公開版では GitHub Actions が 30 分ごとに作り直している）
 let reloading = false;
@@ -340,7 +566,7 @@ if (!load()) {
   $("q").oninput = e => { state.q = e.target.value; state.limit = 60; render(); };
   $("hideRead").checked = state.hideRead;
   $("hideRead").onchange = e => { state.hideRead = e.target.checked; store.set("msr.hideRead", state.hideRead); render(); };
-  if (items.length) { renderSources(); render(); }
+  if (items.length) { renderSources(); render(); } else maybeLoadSns();
 }
 </script>
 </body>
