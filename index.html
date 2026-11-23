@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Motorsport RSS</title>
+<style>
+:root {
+  --bg: #f4f4f2; --surface: #ffffff; --text: #18181b; --muted: #6b6b73;
+  --line: #e2e2de; --accent: #d7261e; --accent-soft: #fde8e6; --chip: #ececea;
+  --read: #9a9aa2;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111113; --surface: #1b1b1f; --text: #ececef; --muted: #9a9aa4;
+    --line: #2c2c32; --accent: #ff4a3d; --accent-soft: #3a1714; --chip: #26262c;
+    --read: #66666e;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Helvetica Neue", sans-serif; }
+header { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+.top { max-width: 1000px; margin: 0 auto; padding: 12px 16px 0; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+h1 { margin: 0; font-size: 18px; letter-spacing: .02em; }
+h1 span { color: var(--accent); }
+.updated { color: var(--muted); font-size: 12px; }
+.updated.stale { color: var(--accent); }
+nav { max-width: 1000px; margin: 0 auto; padding: 8px 16px 0; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+nav::-webkit-scrollbar { display: none; }
+nav button { flex: none; border: 0; background: none; color: var(--muted); font: inherit; font-size: 14px;
+  padding: 8px 12px 10px; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
+nav button.on { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
+nav button small { font-size: 11px; color: var(--muted); margin-left: 3px; font-weight: 400; }
+.filters { max-width: 1000px; margin: 0 auto; padding: 12px 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.seg { display: inline-flex; background: var(--chip); border-radius: 8px; padding: 2px; }
+.seg button { border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+.seg button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+input[type=search], select { font: inherit; font-size: 13px; padding: 5px 10px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--text); border-radius: 8px; }
+input[type=search] { flex: 1; min-width: 140px; }
+label.chk { font-size: 13px; color: var(--muted); display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }
+main { max-width: 1000px; margin: 0 auto; padding: 4px 16px 48px; }
+.item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.item .body { flex: 1; min-width: 0; }
+.meta { font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.src { font-weight: 600; color: var(--text); }
+.tag { background: var(--accent-soft); color: var(--accent); border-radius: 4px; padding: 0 6px; font-size: 11px; font-weight: 600; }
+.item a.title { display: block; color: var(--text); text-decoration: none; font-weight: 600; font-size: 16px; margin: 3px 0; overflow-wrap: anywhere; }
+.item a.title:hover { color: var(--accent); }
+.item.read a.title { color: var(--read); font-weight: 500; }
+.desc { color: var(--muted); font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.thumb { flex: none; width: 120px; height: 72px; border-radius: 6px; object-fit: cover; background: var(--chip); }
+@media (max-width: 560px) { .thumb { width: 84px; height: 56px; } .desc { display: none; } }
+.empty, .notice { color: var(--muted); padding: 32px 0; text-align: center; }
+.notice code { background: var(--chip); padding: 2px 6px; border-radius: 4px; }
+.errors { font-size: 12px; color: var(--muted); padding: 16px 0; }
+.more { display: block; margin: 20px auto; font: inherit; padding: 8px 20px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--text); cursor: pointer; }
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><h1><span>●</span> Motorsport RSS</h1><div class="updated" id="updated"></div></div>
+  <nav id="tabs"></nav>
+  <div class="filters">
+    <div class="seg" id="lang">
+      <button data-v="all" class="on">すべて</button><button data-v="ja">日本語</button><button data-v="en">English</button>
+    </div>
+    <select id="source"></select>
+    <input type="search" id="q" placeholder="キーワードで絞り込み">
+    <label class="chk"><input type="checkbox" id="hideRead"> 既読を隠す</label>
+  </div>
+</header>
+<main id="list"></main>
+
+<script src="data.js"></script>
+<script>
+const CATS = [
+  { id: "all", label: "すべて" },
+  { id: "f1", label: "F1", re: /\bF1\b|Formula ?1|Formula One|フォーミュラ1|グランプリ|Grand Prix/i },
+  { id: "supergt", label: "スーパーGT", re: /スーパーGT|SUPER ?GT/i },
+  { id: "superformula", label: "スーパーフォーミュラ", re: /スーパーフォーミュラ|Super ?Formula/i },
+  { id: "motogp", label: "MotoGP・二輪", re: /MotoGP|Moto2|Moto3|WSBK|WorldSBK|スーパーバイク|8耐|鈴鹿8時間/i },
+  { id: "wec", label: "WEC・耐久", re: /\bWEC\b|ル・マン|Le ?Mans|IMSA|耐久|Endurance|Daytona|Hypercar|ハイパーカー|スーパー耐久/i },
+  { id: "wrc", label: "WRC・ラリー", re: /\bWRC\b|ラリー|Rally|ダカール|Dakar/i },
+  { id: "indy", label: "インディ・NASCAR", re: /IndyCar|インディ|Indy ?500|NASCAR/i },
+  { id: "fe", label: "フォーミュラE", re: /Formula ?E\b|フォーミュラE/i },
+  { id: "other", label: "その他" },
+];
+const CAT_LABEL = Object.fromEntries(CATS.map(c => [c.id, c.label]));
+// 自動分類で F1 と誤判定しやすいので、二輪などを先に判定し F1 は最後に見る
+const AUTO_ORDER = ["supergt", "superformula", "fe", "motogp", "wec", "wrc", "indy", "f1"];
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+const state = {
+  cat: store.get("msr.cat", "all"), lang: store.get("msr.lang", "all"), source: "all", q: "",
+  hideRead: store.get("msr.hideRead", false), limit: 60,
+};
+const readSet = new Set(store.get("msr.read", []));
+
+const $ = id => document.getElementById(id);
+const textOf = html => {
+  if (!html) return "";
+  const d = new DOMParser().parseFromString(html, "text/html");
+  return (d.body.textContent || "").replace(/\s+/g, " ").trim();
+};
+const firstImg = html => {
+  const m = html && html.match(/<img[^>]+src=["']([^"']+)/i);
+  return m ? m[1] : "";
+};
+const decode = b64 => new TextDecoder("utf-8").decode(Uint8Array.from(atob(b64), c => c.charCodeAt(0)));
+
+function child(el, ...names) {
+  for (const n of names) {
+    for (const c of el.children) if (c.localName === n || c.nodeName === n) return c;
+  }
+  return null;
+}
+
+function parseFeed(feed) {
+  const doc = new DOMParser().parseFromString(decode(feed.b64), "application/xml");
+  if (doc.querySelector("parsererror")) throw new Error("XML parse error");
+  const nodes = [...doc.getElementsByTagName("item"), ...doc.getElementsByTagName("entry")];
+  return nodes.map(n => {
+    const title = textOf(child(n, "title")?.textContent || "");
+    const linkEl = child(n, "link");
+    const link = (linkEl?.getAttribute("href") || linkEl?.textContent || "").trim();
+    const dateStr = child(n, "pubDate", "published", "updated", "dc:date")?.textContent;
+    const rawDesc = child(n, "description", "summary")?.textContent || "";
+    const content = child(n, "content:encoded", "encoded", "content")?.textContent || "";
+    const tags = [...n.getElementsByTagName("category")].map(c => c.textContent || c.getAttribute("term") || "");
+    const enc = child(n, "enclosure");
+    const media = n.getElementsByTagNameNS("http://search.yahoo.com/mrss/", "content")[0]
+      || n.getElementsByTagNameNS("http://search.yahoo.com/mrss/", "thumbnail")[0];
+    let img = (enc && /image/.test(enc.getAttribute("type") || "image") && enc.getAttribute("url"))
+      || media?.getAttribute("url") || firstImg(rawDesc) || firstImg(content) || "";
+    const desc = textOf(rawDesc).slice(0, 220);
+    const date = dateStr ? new Date(dateStr.trim()) : null;
+
+    let cats;
+    if (feed.cat === "auto") {
+      const hay = title + " " + tags.join(" ");
+      const hit = AUTO_ORDER.filter(id => CATS.find(c => c.id === id).re.test(hay));
+      // F1 は他カテゴリに当たったら除外（「MotoGP グランプリ」などの誤判定対策）
+      cats = hit.length > 1 ? hit.filter(c => c !== "f1") : hit;
+      if (!cats.length) cats = ["other"];
+    } else cats = [feed.cat];
+
+    return { title, link, date: date && !isNaN(date) ? date : null, desc, img, cats,
+      source: feed.name, lang: feed.lang };
+  }).filter(i => i.title && i.link);
+}
+
+const errors = [];
+let items = [];
+function load() {
+  const data = window.FEED_DATA;
+  if (!data) return false;
+  const seen = new Map();
+  for (const f of data.feeds) {
+    if (!f.ok) { errors.push(`${f.name}（${f.cat}）: HTTP ${f.status}`); continue; }
+    try {
+      for (const it of parseFeed(f)) {
+        const key = it.link.split("?")[0];
+        const prev = seen.get(key);
+        if (prev) { prev.cats = [...new Set([...prev.cats, ...it.cats])]; continue; }
+        seen.set(key, it);
+      }
+    } catch (e) { errors.push(`${f.name}（${f.cat}）: ${e.message}`); }
+  }
+  items = [...seen.values()].sort((a, b) => (b.date || 0) - (a.date || 0));
+  const gen = new Date(data.generated);
+  const ageMin = (Date.now() - gen) / 60000;
+  const el = $("updated");
+  el.textContent = `取得: ${gen.toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}（${ago(gen)}）`
+    + (ageMin > 60 && location.protocol === "file:" ? " — 「更新して開く.command」で最新化できます" : "");
+  el.classList.toggle("stale", ageMin > 60);
+  return true;
+}
+
+function ago(d) {
+  if (!d) return "";
+  const m = Math.round((Date.now() - d) / 60000);
+  if (m < 1) return "たった今";
+  if (m < 60) return `${m}分前`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}時間前`;
+  return `${Math.round(h / 24)}日前`;
+}
+
+function baseFiltered() {
+  const q = state.q.toLowerCase();
+  return items.filter(i =>
+    (state.lang === "all" || i.lang === state.lang) &&
+    (state.source === "all" || i.source === state.source) &&
+    (!state.hideRead || !readSet.has(i.link)) &&
+    (!q || (i.title + " " + i.desc).toLowerCase().includes(q)));
+}
+
+function renderTabs(base) {
+  const counts = {};
+  for (const i of base) for (const c of i.cats) counts[c] = (counts[c] || 0) + 1;
+  $("tabs").innerHTML = "";
+  for (const c of CATS) {
+    const n = c.id === "all" ? base.length : (counts[c.id] || 0);
+    const b = document.createElement("button");
+    b.className = c.id === state.cat ? "on" : "";
+    b.innerHTML = `${c.label}<small>${n}</small>`;
+    b.onclick = () => { state.cat = c.id; state.limit = 60; store.set("msr.cat", c.id); render(); window.scrollTo(0, 0); };
+    $("tabs").appendChild(b);
+  }
+}
+
+function renderSources() {
+  const names = [...new Set(items.filter(i => state.lang === "all" || i.lang === state.lang).map(i => i.source))].sort();
+  if (state.source !== "all" && !names.includes(state.source)) state.source = "all";
+  $("source").innerHTML = `<option value="all">すべてのサイト</option>` +
+    names.map(n => `<option${n === state.source ? " selected" : ""}></option>`).join("");
+  [...$("source").options].slice(1).forEach((o, k) => { o.value = o.textContent = names[k]; });
+  $("source").value = state.source;
+}
+
+function render() {
+  const base = baseFiltered();
+  renderTabs(base);
+  const list = state.cat === "all" ? base : base.filter(i => i.cats.includes(state.cat));
+  const main = $("list");
+  main.innerHTML = "";
+  if (!list.length) main.innerHTML = `<div class="empty">記事がありません</div>`;
+  for (const i of list.slice(0, state.limit)) {
+    const row = document.createElement("article");
+    row.className = "item" + (readSet.has(i.link) ? " read" : "");
+    const body = document.createElement("div");
+    body.className = "body";
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    const src = document.createElement("span"); src.className = "src"; src.textContent = i.source; meta.appendChild(src);
+    if (state.cat === "all" || i.cats.length > 1)
+      for (const c of i.cats) { const t = document.createElement("span"); t.className = "tag"; t.textContent = CAT_LABEL[c]; meta.appendChild(t); }
+    const tm = document.createElement("span"); tm.textContent = ago(i.date);
+    if (i.date) tm.title = i.date.toLocaleString("ja-JP");
+    meta.appendChild(tm);
+    const a = document.createElement("a");
+    a.className = "title"; a.href = i.link; a.target = "_blank"; a.rel = "noopener"; a.textContent = i.title;
+    a.onclick = () => { readSet.add(i.link); store.set("msr.read", [...readSet].slice(-3000)); row.classList.add("read"); };
+    const d = document.createElement("div"); d.className = "desc"; d.textContent = i.desc;
+    body.append(meta, a, d);
+    row.appendChild(body);
+    if (i.img && /^https?:/.test(i.img)) {
+      const img = document.createElement("img");
+      img.className = "thumb"; img.loading = "lazy"; img.src = i.img; img.alt = ""; img.referrerPolicy = "no-referrer";
+      img.onerror = () => img.remove();
+      row.appendChild(img);
+    }
+    main.appendChild(row);
+  }
+  if (list.length > state.limit) {
+    const m = document.createElement("button");
+    m.className = "more"; m.textContent = `さらに表示（残り ${list.length - state.limit} 件）`;
+    m.onclick = () => { state.limit += 60; render(); };
+    main.appendChild(m);
+  }
+  if (errors.length) {
+    const e = document.createElement("div");
+    e.className = "errors"; e.textContent = "取得できなかったフィード: " + errors.join(" / ");
+    main.appendChild(e);
+  }
+}
+
+if (!load()) {
+  $("list").innerHTML = `<div class="notice">データがありません。ターミナルで <code>./fetch.sh</code> を実行するか、「更新して開く.command」をダブルクリックしてください。</div>`;
+} else {
+  for (const b of $("lang").children) {
+    b.classList.toggle("on", b.dataset.v === state.lang);
+    b.onclick = () => {
+      state.lang = b.dataset.v; store.set("msr.lang", state.lang);
+      for (const x of $("lang").children) x.classList.toggle("on", x === b);
+      renderSources(); render();
+    };
+  }
+  $("source").onchange = e => { state.source = e.target.value; render(); };
+  $("q").oninput = e => { state.q = e.target.value; state.limit = 60; render(); };
+  $("hideRead").checked = state.hideRead;
+  $("hideRead").onchange = e => { state.hideRead = e.target.checked; store.set("msr.hideRead", state.hideRead); render(); };
+  renderSources();
+  render();
+}
+</script>
+</body>
+</html>
