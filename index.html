@@ -385,7 +385,8 @@ async function loadSns(force) {
   if (!snsVisible() && !force) return;  // スマホでパネルを閉じているときは取りに行かない
 
   const seq = ++snsSeq;
-  const limit = tags.length > 2 ? 15 : 30;
+  // 「すべて」の言語でも日本語・英語以外は後で除くので、多めに取る
+  const limit = tags.length > 2 ? (state.lang === "all" ? 30 : 15) : (state.lang === "all" ? 60 : 30);
   const results = await Promise.allSettled(tags.map(async tag => {
     const p = new URLSearchParams({ q: tag, sort: "latest", limit });
     if (state.lang !== "all") p.set("lang", state.lang);
@@ -404,6 +405,7 @@ async function loadSns(force) {
   const posts = ok.flatMap(r => r.value)
     .filter(p => !seen.has(p.uri) && seen.add(p.uri))
     .filter(p => ![...(p.labels || []), ...(p.author?.labels || [])].some(l => BLOCKED_LABELS.has(l.val)))
+    .filter(p => { const l = p.record?.langs; return !l || !l.length || l.some(x => /^(ja|en)/.test(x)); })
     .sort((a, b) => new Date(b.indexedAt) - new Date(a.indexedAt))
     .slice(0, 60);
   snsCache.set(key, { t: Date.now(), posts });
