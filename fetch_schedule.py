@@ -160,6 +160,9 @@ def main():
     with open(path + ".tmp", "w", encoding="utf-8") as f:
         f.write("window.SCHEDULE_DATA=" + json.dumps(out, ensure_ascii=False) + ";\n")
     os.replace(path + ".tmp", path)
+    # iPhone アプリなど、ブラウザ以外から読むための JSON
+    with open(os.path.join(HERE, "schedule.json"), "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False)
     print(f"  ✓ 日程: {len(events)} 件 → schedule.js", file=sys.stderr)
 
 
