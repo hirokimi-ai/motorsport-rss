@@ -73,4 +73,7 @@ OUT=data.js.tmp
 } > "$OUT" && mv "$OUT" data.js
 
 echo "完了: data.js を更新しました"
+
+echo "レース日程を取得中..."
+python3 fetch_schedule.py || echo "  ✗ 日程を取得できませんでした（前回の schedule.js を使います）"
 if [ "${1:-}" = "--open" ]; then open index.html; fi

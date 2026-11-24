@@ -101,6 +101,49 @@ main { min-width: 0; padding: 4px 0 48px; }
 .sns-fab { display: none; position: fixed; right: 16px; bottom: 20px; z-index: 15; border: 0; border-radius: 999px;
   background: var(--accent); color: #fff; font: inherit; font-weight: 600; font-size: 14px; padding: 10px 18px;
   box-shadow: 0 4px 14px rgba(0,0,0,.25); cursor: pointer; }
+/* 日程・配信 */
+.seg.view { align-self: center; }
+.seg.view button { font-weight: 600; }
+body.view-schedule .filters { display: none; }
+body.view-schedule nav { padding-bottom: 8px; }
+.sch-intro { font-size: 12px; color: var(--muted); padding: 14px 0 4px; }
+.bc-box { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 10px 0 6px; }
+.bc-box h3 { margin: 0 0 8px; font-size: 14px; }
+.bc-box ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.bc-box li { font-size: 13px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.bc-box li a { color: var(--text); font-weight: 600; }
+.bc-box li b { font-weight: 600; }
+.bc-box li span { color: var(--muted); font-size: 12px; }
+.kind { font-size: 10px; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+.month { font-size: 13px; font-weight: 700; color: var(--muted); padding: 18px 0 6px; border-bottom: 2px solid var(--line); }
+.ev { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.ev.next { background: var(--accent-soft); margin: 0 -12px; padding: 14px 12px; border-radius: 10px; border-bottom: 0; }
+.ev-date { flex: none; width: 72px; text-align: center; line-height: 1.3; }
+.ev-date b { display: block; font-size: 20px; }
+.ev-date small { color: var(--muted); font-size: 12px; }
+.ev-date span { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+.ev-body { flex: 1; min-width: 0; }
+.ev-name { font-weight: 700; font-size: 17px; margin: 2px 0; }
+.ev-venue { font-size: 13px; color: var(--muted); }
+.badge { font-size: 11px; font-weight: 700; border-radius: 4px; padding: 0 6px; }
+.badge.live { background: var(--accent); color: #fff; }
+.badge.soon { color: var(--accent); }
+.badge.prov { color: var(--muted); border: 1px solid var(--line); }
+.sessions { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 8px; }
+.ses { font-size: 12px; background: var(--chip); border-radius: 6px; padding: 2px 8px; white-space: nowrap; }
+.ses b { margin-right: 4px; }
+.ses.race { background: var(--accent); color: #fff; }
+.ses.past { opacity: .45; }
+.ses-note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.bc-chips { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 8px; align-items: center; font-size: 12px; }
+.bc-chips > span:first-child { color: var(--muted); }
+.bc-chips a, .bc-chips em { font-style: normal; color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px;
+  text-decoration: none; background: var(--surface); }
+.bc-chips a:hover { border-color: var(--accent); color: var(--accent); }
+.sch-foot { font-size: 12px; color: var(--muted); padding: 24px 0; line-height: 1.8; }
+.sch-foot a { color: var(--muted); }
+@media (max-width: 560px) { .ev-date { width: 56px; } .ev-date b { font-size: 17px; } }
+
 @media (max-width: 899px) {
   .layout { grid-template-columns: minmax(0, 1fr); }
   #sns { display: none; }
@@ -115,7 +158,9 @@ main { min-width: 0; padding: 4px 0 48px; }
 </head>
 <body>
 <header>
-  <div class="top"><h1><span>●</span> Motorsport RSS</h1><div class="updated" id="updated"></div><button id="refresh" class="refresh">更新</button></div>
+  <div class="top"><h1><span>●</span> Motorsport RSS</h1>
+    <div class="seg view" id="view"><button data-v="news">ニュース</button><button data-v="schedule">日程・配信</button></div>
+    <div class="updated" id="updated"></div><button id="refresh" class="refresh">更新</button></div>
   <div class="msg" id="msg" role="status"></div>
   <nav id="tabs"></nav>
   <div class="filters">
@@ -142,6 +187,7 @@ main { min-width: 0; padding: 4px 0 48px; }
 <button id="snsFab" class="sns-fab">SNS</button>
 
 <script src="data.js"></script>
+<script src="schedule.js"></script>
 <script>
 const CATS = [
   { id: "all", label: "すべて" },
@@ -164,6 +210,7 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 const state = {
+  view: store.get("msr.view", "news"),
   cat: store.get("msr.cat", "all"), lang: store.get("msr.lang", "all"), source: "all", q: "",
   hideRead: store.get("msr.hideRead", false), limit: 60,
 };
@@ -276,9 +323,14 @@ function baseFiltered() {
 function renderTabs(base) {
   const counts = {};
   for (const i of base) for (const c of i.cats) counts[c] = (counts[c] || 0) + 1;
+  drawTabs(counts, base.length);
+}
+
+function drawTabs(counts, total) {
   $("tabs").innerHTML = "";
   for (const c of CATS) {
-    const n = c.id === "all" ? base.length : (counts[c.id] || 0);
+    if (c.id === "other" && state.view === "schedule") continue;  // 日程に「その他」はない
+    const n = c.id === "all" ? total : (counts[c.id] || 0);
     const b = document.createElement("button");
     b.className = c.id === state.cat ? "on" : "";
     b.innerHTML = `${c.label}<small>${n}</small>`;
@@ -298,6 +350,9 @@ function renderSources() {
 
 function render() {
   maybeLoadSns();
+  document.body.classList.toggle("view-schedule", state.view === "schedule");
+  for (const b of $("view").children) b.classList.toggle("on", b.dataset.v === state.view);
+  if (state.view === "schedule") { renderSchedule(); return; }
   const base = baseFiltered();
   renderTabs(base);
   const list = state.cat === "all" ? base : base.filter(i => i.cats.includes(state.cat));
@@ -342,6 +397,157 @@ function render() {
     e.className = "errors"; e.textContent = "取得できなかったフィード: " + errors.join(" / ");
     main.appendChild(e);
   }
+}
+
+// ---- 日程・配信（schedule.js。F1 と MotoGP はセッション時刻つき） ----
+const SERIES_LABEL = { f1: "F1", supergt: "スーパーGT", superformula: "スーパーフォーミュラ", motogp: "MotoGP",
+  wec: "WEC", wrc: "WRC", indy: "インディカー", fe: "フォーミュラE" };
+const JST = "Asia/Tokyo";
+const fmtSession = new Intl.DateTimeFormat("ja-JP", { timeZone: JST, month: "numeric", day: "numeric", weekday: "short", hour: "2-digit", minute: "2-digit" });
+const fmtYmd = new Intl.DateTimeFormat("en-CA", { timeZone: JST, year: "numeric", month: "2-digit", day: "2-digit" });
+const todayJST = () => fmtYmd.format(new Date());
+// "2027-03-07" → { md: "3/7", wd: "日" }（日付だけのデータなので UTC の正午で曜日を出す）
+function dayParts(ymd) {
+  const d = new Date(ymd + "T12:00:00Z");
+  return { md: `${d.getUTCMonth() + 1}/${d.getUTCDate()}`, wd: "日月火水木金土"[d.getUTCDay()] };
+}
+function daysUntil(ymd) {
+  return Math.round((new Date(ymd + "T00:00:00Z") - new Date(todayJST() + "T00:00:00Z")) / 86400000);
+}
+
+function scheduleEvents() {
+  const d = window.SCHEDULE_DATA;
+  if (!d) return [];
+  const today = todayJST();
+  return d.events.filter(e => e.end >= today);
+}
+
+function broadcastLinks(list, withDetail) {
+  return (list || []).map(b => {
+    const el = document.createElement(b.url ? "a" : "em");
+    if (b.url) { el.href = b.url; el.target = "_blank"; el.rel = "noopener"; }
+    el.textContent = b.name;
+    el.title = [b.kind, b.detail].filter(Boolean).join(" · ");
+    if (!withDetail) return el;
+    const li = document.createElement("li");
+    const kind = document.createElement("span"); kind.className = "kind"; kind.textContent = b.kind || "";
+    const name = document.createElement(b.url ? "a" : "b");
+    if (b.url) { name.href = b.url; name.target = "_blank"; name.rel = "noopener"; }
+    name.textContent = b.name;
+    const detail = document.createElement("span"); detail.textContent = b.detail || "";
+    li.append(kind, name, detail);
+    return li;
+  });
+}
+
+function renderSchedule() {
+  const data = window.SCHEDULE_DATA;
+  const all = scheduleEvents();
+  const counts = {};
+  for (const e of all) counts[e.series] = (counts[e.series] || 0) + 1;
+  drawTabs(counts, all.length);
+
+  const main = $("list");
+  main.innerHTML = "";
+  if (!data) {
+    main.innerHTML = `<div class="notice">日程データがありません。ターミナルで <code>./fetch.sh</code> を実行してください。</div>`;
+    return;
+  }
+  const list = state.cat === "all" ? all : all.filter(e => e.series === state.cat);
+  const intro = document.createElement("div");
+  intro.className = "sch-intro";
+  intro.textContent = "時刻はすべて日本時間です。F1・MotoGP はセッションごとの時刻を表示しています。";
+  main.appendChild(intro);
+
+  // カテゴリーを選んでいるときは、そのシリーズの配信先を詳しく出す
+  const bcs = data.broadcasts[state.cat];
+  if (bcs) {
+    const box = document.createElement("div"); box.className = "bc-box";
+    const h = document.createElement("h3"); h.textContent = `${SERIES_LABEL[state.cat]} の日本での視聴方法`;
+    const ul = document.createElement("ul"); ul.append(...broadcastLinks(bcs, true));
+    box.append(h, ul);
+    main.appendChild(box);
+  }
+
+  if (!list.length) {
+    main.insertAdjacentHTML("beforeend", `<div class="empty">このカテゴリーの今後の日程はまだ発表されていません</div>`);
+  }
+  const now = Date.now(), today = todayJST();
+  let month = "", markedNext = false;
+  for (const e of list) {
+    const m = e.start.slice(0, 7);
+    if (m !== month) {
+      month = m;
+      const h = document.createElement("div"); h.className = "month";
+      h.textContent = `${m.slice(0, 4)}年${Number(m.slice(5))}月`;
+      main.appendChild(h);
+    }
+    const ev = document.createElement("article");
+    ev.className = "ev";
+    if (!markedNext) { ev.classList.add("next"); markedNext = true; }
+
+    const s = dayParts(e.start), en = dayParts(e.end);
+    const date = document.createElement("div"); date.className = "ev-date";
+    date.innerHTML = `<b></b><small></small>`;
+    date.querySelector("b").textContent = s.md;
+    date.querySelector("small").textContent = `(${s.wd})`;
+    if (e.end !== e.start) { const t = document.createElement("span"); t.textContent = `〜${en.md}(${en.wd})`; date.appendChild(t); }
+
+    const body = document.createElement("div"); body.className = "ev-body";
+    const meta = document.createElement("div"); meta.className = "meta";
+    const tag = document.createElement("span"); tag.className = "tag"; tag.textContent = SERIES_LABEL[e.series] || e.series;
+    meta.appendChild(tag);
+    if (e.round) meta.append(e.round);
+    const badge = document.createElement("span"); badge.className = "badge";
+    const d = daysUntil(e.start);
+    if (e.start <= today && today <= e.end) { badge.classList.add("live"); badge.textContent = "開催中"; }
+    else if (d === 1) { badge.classList.add("soon"); badge.textContent = "明日から"; }
+    else if (d <= 14) { badge.classList.add("soon"); badge.textContent = `あと ${d} 日`; }
+    if (badge.textContent) meta.appendChild(badge);
+    if (e.provisional) { const p = document.createElement("span"); p.className = "badge prov"; p.textContent = "暫定"; meta.appendChild(p); }
+
+    const name = document.createElement("div"); name.className = "ev-name"; name.textContent = e.name;
+    const venue = document.createElement("div"); venue.className = "ev-venue";
+    venue.textContent = [e.venue, e.note].filter(Boolean).join(" · ");
+    body.append(meta, name, venue);
+
+    if (e.sessions && e.sessions.length) {
+      const ss = document.createElement("div"); ss.className = "sessions";
+      for (const x of e.sessions) {
+        const t = new Date(x.time);
+        const el = document.createElement("span");
+        el.className = "ses" + (x.name === "決勝" ? " race" : "") + (t.getTime() + 2 * 3600000 < now ? " past" : "");
+        const b = document.createElement("b"); b.textContent = x.name;
+        el.append(b, fmtSession.format(t));
+        ss.appendChild(el);
+      }
+      body.appendChild(ss);
+    } else {
+      const n = document.createElement("div"); n.className = "ses-note";
+      n.textContent = "セッションの時刻は未発表です。";
+      body.appendChild(n);
+    }
+
+    const chips = document.createElement("div"); chips.className = "bc-chips";
+    const label = document.createElement("span"); label.textContent = "配信";
+    chips.append(label, ...broadcastLinks(data.broadcasts[e.series], false));
+    body.appendChild(chips);
+
+    ev.append(date, body);
+    main.appendChild(ev);
+  }
+
+  const foot = document.createElement("div"); foot.className = "sch-foot";
+  const gen = new Date(data.generated);
+  foot.append(`${data.broadcastNote} F1・MotoGP の日程は ${gen.toLocaleString("ja-JP", { timeZone: JST })} に自動取得、それ以外のシリーズは ${data.manualUpdated} 時点の発表をもとにしています。「暫定」は主催者が予定として発表した日程です。`);
+  foot.appendChild(document.createElement("br"));
+  foot.append("出典: ");
+  data.sources.forEach((src, i) => {
+    const a = document.createElement("a"); a.href = src.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = src.label;
+    if (i) foot.append(" / ");
+    foot.appendChild(a);
+  });
+  main.appendChild(foot);
 }
 
 // ---- SNS（Bluesky の公式・記者アカウントの投稿。ブラウザから直接取得できる） ----
@@ -570,6 +776,15 @@ function reloadData(manual) {
   };
   s.onerror = () => done("読み込めませんでした。通信状況を確認してください");
   document.head.appendChild(s);
+  reloadSchedule();
+}
+
+function reloadSchedule() {
+  const s = document.createElement("script");
+  s.src = "schedule.js?t=" + Date.now();
+  s.onload = () => { s.remove(); if (state.view === "schedule") render(); };
+  s.onerror = () => s.remove();
+  document.head.appendChild(s);
 }
 
 let flashTimer;
@@ -601,7 +816,13 @@ if (!load()) {
   $("q").oninput = e => { state.q = e.target.value; state.limit = 60; render(); };
   $("hideRead").checked = state.hideRead;
   $("hideRead").onchange = e => { state.hideRead = e.target.checked; store.set("msr.hideRead", state.hideRead); render(); };
-  if (items.length) { renderSources(); render(); } else maybeLoadSns();
+  for (const b of $("view").children) {
+    b.onclick = () => {
+      state.view = b.dataset.v; store.set("msr.view", state.view);
+      render(); window.scrollTo(0, 0);
+    };
+  }
+  if (items.length || state.view === "schedule") { renderSources(); render(); } else maybeLoadSns();
 }
 </script>
 </body>

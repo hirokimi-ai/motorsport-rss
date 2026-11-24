@@ -1,0 +1,108 @@
+{
+  "updated": "2026-11-24",
+  "broadcastNote": "配信先は 2026 年シーズンの日本での実績です。2027 年シーズンは変わることがあるので、各サービスの番組表で確認してください。",
+  "broadcasts": {
+    "f1": [
+      { "name": "フジテレビNEXT ライブ・プレミアム", "kind": "CS", "detail": "全セッション生中継" },
+      { "name": "FOD F1プラン", "kind": "配信", "detail": "全セッション生配信", "url": "https://fod.fujitv.co.jp/" },
+      { "name": "フジテレビNEXTsmart", "kind": "配信", "detail": "CS 放送のネット版" },
+      { "name": "F1 TV", "kind": "配信", "detail": "公式。オンボード・無線", "url": "https://f1tv.formula1.com/" },
+      { "name": "フジテレビ（地上波）", "kind": "地上波", "detail": "一部レースのダイジェスト" }
+    ],
+    "motogp": [
+      { "name": "日テレジータス", "kind": "CS", "detail": "全戦の予選・スプリント・決勝を生中継", "url": "https://www.gtasu.com/" },
+      { "name": "Hulu", "kind": "配信", "detail": "ライブ・見逃し配信", "url": "https://www.hulu.jp/" },
+      { "name": "MotoGP VideoPass", "kind": "配信", "detail": "公式", "url": "https://www.motogp.com/" }
+    ],
+    "supergt": [
+      { "name": "ニコニコ生放送", "kind": "配信", "detail": "全戦の予選・決勝（有料チケット）", "url": "https://live.nicovideo.jp/" },
+      { "name": "J SPORTS / J SPORTSオンデマンド", "kind": "BS・配信", "detail": "2025 年は全戦中継", "url": "https://www.jsports.co.jp/motor/" },
+      { "name": "SUPER GT 公式 YouTube", "kind": "無料", "detail": "レース後のダイジェスト" }
+    ],
+    "superformula": [
+      { "name": "SFgo", "kind": "配信", "detail": "公式アプリ。オンボード・テレメトリ" },
+      { "name": "J SPORTS / J SPORTSオンデマンド", "kind": "BS・配信", "url": "https://www.jsports.co.jp/motor/" },
+      { "name": "ABEMA", "kind": "無料", "detail": "無料ライブ・見逃し配信", "url": "https://abema.tv/" },
+      { "name": "FOD", "kind": "配信", "url": "https://fod.fujitv.co.jp/" }
+    ],
+    "wec": [
+      { "name": "J SPORTS / J SPORTSオンデマンド", "kind": "BS・配信", "detail": "全戦", "url": "https://www.jsports.co.jp/motor/" },
+      { "name": "ABEMA", "kind": "無料", "detail": "ル・マン 24 時間の決勝", "url": "https://abema.tv/" }
+    ],
+    "wrc": [
+      { "name": "J SPORTS / J SPORTSオンデマンド", "kind": "BS・配信", "url": "https://www.jsports.co.jp/motor/" },
+      { "name": "ABEMA", "kind": "無料", "detail": "シェイクダウンから最終日まで", "url": "https://abema.tv/" },
+      { "name": "Rally.TV", "kind": "配信", "detail": "WRC 公式", "url": "https://rally.tv/" }
+    ],
+    "indy": [
+      { "name": "GAORA SPORTS", "kind": "CS", "detail": "全戦の決勝", "url": "https://www.gaora.co.jp/" },
+      { "name": "GAORAオンデマンド", "kind": "配信", "detail": "インディ 500 などをライブ配信", "url": "https://www.gaora.co.jp/" }
+    ],
+    "fe": [
+      { "name": "J SPORTS / J SPORTSオンデマンド", "kind": "BS・配信", "detail": "Amazon の J SPORTS チャンネルでも視聴可", "url": "https://www.jsports.co.jp/motor/" }
+    ]
+  },
+  "events": [
+    { "series": "fe", "name": "メキシコシティ E-Prix", "round": "Rd.1", "venue": "アウトドローモ・エルマノス・ロドリゲス", "start": "2027-01-16", "end": "2027-01-16" },
+    { "series": "fe", "name": "オースティン E-Prix", "round": "Rd.2", "venue": "サーキット・オブ・ジ・アメリカズ", "start": "2027-02-06", "end": "2027-02-06" },
+    { "series": "fe", "name": "マイアミ E-Prix", "round": "Rd.3", "venue": "マイアミ・インターナショナル・オートドローム", "start": "2027-02-20", "end": "2027-02-20" },
+    { "series": "fe", "name": "サンパウロ E-Prix", "round": "Rd.4", "venue": "アニェンビ・サンボドロモ", "start": "2027-03-13", "end": "2027-03-13" },
+    { "series": "fe", "name": "三亜 E-Prix", "round": "Rd.5", "venue": "海棠湾サーキット", "start": "2027-04-03", "end": "2027-04-03" },
+    { "series": "fe", "name": "ジッダ E-Prix", "round": "Rd.6–7", "venue": "ジッダ・コーニッシュ・サーキット", "start": "2027-04-16", "end": "2027-04-17" },
+    { "series": "fe", "name": "モナコ E-Prix", "round": "Rd.8–9", "venue": "モナコ市街地コース", "start": "2027-05-01", "end": "2027-05-02" },
+    { "series": "fe", "name": "ベルリン E-Prix", "round": "Rd.10–11", "venue": "テンペルホーフ空港", "start": "2027-05-08", "end": "2027-05-09" },
+    { "series": "fe", "name": "ロンドン E-Prix", "round": "Rd.12–13", "venue": "ブランズハッチ", "start": "2027-05-29", "end": "2027-05-30" },
+    { "series": "fe", "name": "ザントフォールト E-Prix", "round": "Rd.14–15", "venue": "ザントフォールト・サーキット", "start": "2027-06-18", "end": "2027-06-19" },
+    { "series": "fe", "name": "マドリード E-Prix", "round": "Rd.16–17", "venue": "ハラマ・サーキット", "start": "2027-06-26", "end": "2027-06-27" },
+    { "series": "fe", "name": "上海 E-Prix", "round": "Rd.18–19", "venue": "上海インターナショナル・サーキット", "start": "2027-07-10", "end": "2027-07-11" },
+    { "series": "fe", "name": "東京 E-Prix", "round": "Rd.20–21", "venue": "東京ストリート・サーキット", "start": "2027-07-24", "end": "2027-07-25" },
+
+    { "series": "wrc", "name": "ラリー・モンテカルロ", "round": "Rd.1", "venue": "モナコ・フランス", "start": "2027-01-21", "end": "2027-01-24" },
+    { "series": "wrc", "name": "ラリー・サウジアラビア", "round": "最終戦", "venue": "サウジアラビア", "start": "2027-11-25", "end": "2027-11-28" },
+
+    { "series": "wec", "name": "カタール 1812km", "round": "Rd.1", "venue": "ルサイル・インターナショナル・サーキット", "start": "2027-03-25", "end": "2027-03-27" },
+    { "series": "wec", "name": "イモラ 6 時間", "round": "Rd.2", "venue": "イモラ・サーキット", "start": "2027-04-09", "end": "2027-04-11" },
+    { "series": "wec", "name": "シルバーストン 6 時間", "round": "Rd.3", "venue": "シルバーストン・サーキット", "start": "2027-04-25", "end": "2027-04-25", "note": "決勝日" },
+    { "series": "wec", "name": "スパ・フランコルシャン 6 時間", "round": "Rd.4", "venue": "スパ・フランコルシャン", "start": "2027-05-15", "end": "2027-05-15", "note": "決勝日" },
+
+    { "series": "indy", "name": "セントピーターズバーグ", "round": "開幕戦", "venue": "セントピーターズバーグ市街地コース", "start": "2027-03-07", "end": "2027-03-07", "note": "決勝日" },
+    { "series": "indy", "name": "フェニックス", "venue": "フェニックス・レースウェイ", "start": "2027-03-13", "end": "2027-03-13", "note": "決勝日" },
+    { "series": "indy", "name": "アーリントン", "venue": "アーリントン市街地コース", "start": "2027-03-21", "end": "2027-03-21", "note": "決勝日" },
+    { "series": "indy", "name": "バーバー", "venue": "バーバー・モータースポーツ・パーク", "start": "2027-04-04", "end": "2027-04-04", "note": "決勝日" },
+    { "series": "indy", "name": "ロングビーチ", "venue": "ロングビーチ市街地コース", "start": "2027-04-18", "end": "2027-04-18", "note": "決勝日" },
+    { "series": "indy", "name": "インディ 500", "venue": "インディアナポリス・モーター・スピードウェイ", "start": "2027-05-30", "end": "2027-05-30", "note": "決勝日" },
+    { "series": "indy", "name": "バルセロナ", "venue": "カタロニア・サーキット", "start": "2027-07-18", "end": "2027-07-18", "note": "決勝日" },
+    { "series": "indy", "name": "ラグナセカ", "round": "最終戦", "venue": "ウェザーテック・レースウェイ・ラグナセカ", "start": "2027-09-05", "end": "2027-09-05", "note": "決勝日" },
+
+    { "series": "supergt", "name": "岡山", "round": "第1戦", "venue": "岡山国際サーキット", "start": "2027-04-03", "end": "2027-04-04", "provisional": true },
+    { "series": "supergt", "name": "富士", "round": "第2戦", "venue": "富士スピードウェイ", "start": "2027-05-03", "end": "2027-05-04", "provisional": true },
+    { "series": "supergt", "name": "セパン", "round": "第3戦", "venue": "セパン・インターナショナル・サーキット（マレーシア）", "start": "2027-06-18", "end": "2027-06-19", "provisional": true },
+    { "series": "supergt", "name": "鈴鹿", "round": "第4戦", "venue": "鈴鹿サーキット", "start": "2027-07-31", "end": "2027-08-01", "provisional": true },
+    { "series": "supergt", "name": "鈴鹿 1000km（IGTC）", "venue": "鈴鹿サーキット", "start": "2027-09-04", "end": "2027-09-05", "provisional": true, "note": "GT300 のみ" },
+    { "series": "supergt", "name": "SUGO", "round": "第5戦", "venue": "スポーツランドSUGO", "start": "2027-09-18", "end": "2027-09-19", "provisional": true },
+    { "series": "supergt", "name": "オートポリス", "round": "第6戦", "venue": "オートポリス", "start": "2027-10-16", "end": "2027-10-17", "provisional": true },
+    { "series": "supergt", "name": "富士", "round": "第7戦", "venue": "富士スピードウェイ", "start": "2027-11-06", "end": "2027-11-07", "provisional": true },
+    { "series": "supergt", "name": "もてぎ", "round": "第8戦", "venue": "モビリティリゾートもてぎ", "start": "2027-11-20", "end": "2027-11-21", "provisional": true },
+
+    { "series": "superformula", "name": "鈴鹿", "round": "開幕戦", "venue": "鈴鹿サーキット", "start": "2027-03-12", "end": "2027-03-14", "provisional": true },
+    { "series": "superformula", "name": "もてぎ", "venue": "モビリティリゾートもてぎ", "start": "2027-04-16", "end": "2027-04-18", "provisional": true },
+    { "series": "superformula", "name": "オートポリス", "venue": "オートポリス", "start": "2027-05-14", "end": "2027-05-16", "provisional": true },
+    { "series": "superformula", "name": "SUGO", "venue": "スポーツランドSUGO", "start": "2027-06-25", "end": "2027-06-27", "provisional": true },
+    { "series": "superformula", "name": "富士", "venue": "富士スピードウェイ", "start": "2027-07-16", "end": "2027-07-18", "provisional": true },
+    { "series": "superformula", "name": "富士", "venue": "富士スピードウェイ", "start": "2027-10-08", "end": "2027-10-10", "provisional": true },
+    { "series": "superformula", "name": "鈴鹿（JAF グランプリ）", "round": "最終戦", "venue": "鈴鹿サーキット", "start": "2027-11-26", "end": "2027-11-28", "provisional": true }
+  ],
+  "sources": [
+    { "label": "F1 日程（Jolpica F1 API・自動取得）", "url": "https://api.jolpi.ca/ergast/f1/current/races/" },
+    { "label": "MotoGP 日程（MotoGP 公式・自動取得）", "url": "https://www.motogp.com/en/calendar" },
+    { "label": "フォーミュラE 公式カレンダー", "url": "https://www.fiaformulae.com/en/calendar" },
+    { "label": "WRC 2027 カレンダー", "url": "https://www.wrc.com/en/news/wrc-calendar-2027" },
+    { "label": "WEC 2027 カレンダー", "url": "https://www.fiawec.com/en/news/fia-wec-reveals-nine-round-2027-calendar-as-series-expands/13598" },
+    { "label": "IndyCar 2027 スケジュール", "url": "https://www.espn.com/racing/story/_/id/49591139/indycar-unveils-opening-eight-races-2027-schedule" },
+    { "label": "SUPER GT 2027 カレンダー（予定）", "url": "https://supergt.net/news_race_report/2027%E5%B9%B4%E3%81%AEsuper-gt%E3%82%AB%E3%83%AC%E3%83%B3%E3%83%80%E3%83%BC%EF%BC%88%E4%BA%88%E5%AE%9A%EF%BC%89%E3%82%92%E7%99%BA%E8%A1%A8" },
+    { "label": "スーパーフォーミュラ 2027 カレンダー（予定）", "url": "https://jp.motorsport.com/super-formula/news/2027-sf-calender/10843221/" },
+    { "label": "F1 の配信（2026）", "url": "https://selectra.jp/streaming/sports/f1" },
+    { "label": "MotoGP の配信（2026）", "url": "https://spocale.com/blog/motogp-stream/" },
+    { "label": "インディカーの放送（GAORA）", "url": "https://prtimes.jp/main/html/rd/p/000000500.000009300.html" }
+  ]
+}
