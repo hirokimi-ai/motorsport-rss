@@ -404,12 +404,12 @@ function parseFeed(feed) {
     const date = dateStr ? new Date(dateStr.trim()) : null;
 
     let cats;
-    if (feed.cat === "auto") {
+    if (feed.cat.startsWith("auto")) {
       const hay = title + " " + tags.join(" ");
       const hit = AUTO_ORDER.filter(id => CATS.find(c => c.id === id).re.test(hay));
-      // F1 は他カテゴリに当たったら除外（「MotoGP グランプリ」などの誤判定対策）
-      cats = hit.length > 1 ? hit.filter(c => c !== "f1") : hit;
-      if (!cats.length) cats = ["other"];
+      // F1 は他カテゴリに当たったら除外（「MotoGP グランプリ」などの誤判定対策）。ただしタイトルに「F1」とあれば残す
+      cats = hit.length > 1 && !/\bF1\b/.test(title) ? hit.filter(c => c !== "f1") : hit;
+      if (!cats.length) cats = [feed.cat.split(":")[1] || "other"];  // "auto:f1" なら F1 に入れる
     } else cats = [feed.cat];
 
     return { title, link, date: date && !isNaN(date) ? date : null, desc, img, cats,

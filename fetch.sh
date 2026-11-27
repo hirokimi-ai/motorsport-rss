@@ -7,6 +7,7 @@ cd "$(dirname "$0")"
 
 # id|カテゴリ|言語|表示名|URL
 # カテゴリ "auto" はタイトル・タグから自動でカテゴリ分けする総合フィード
+# "auto:f1" はどのカテゴリにも当たらなかった記事を F1 に入れる
 FEEDS=$(cat <<'EOF'
 msjp-f1|f1|ja|Motorsport.com 日本版|https://jp.motorsport.com/rss/f1/news/
 asweb-f1|f1|ja|auto sport web|https://www.as-web.jp/f1/feed
@@ -37,6 +38,7 @@ ms-fe|fe|en|Motorsport.com|https://www.motorsport.com/rss/formula-e/news/
 asweb-all|auto|ja|auto sport web|https://www.as-web.jp/feed
 therace|auto|en|The Race|https://www.the-race.com/feed/
 racefans|auto|en|RaceFans|https://www.racefans.net/feed/
+topnews|auto:f1|ja|TopNews|https://www.topnews.jp/feed
 EOF
 )
 
